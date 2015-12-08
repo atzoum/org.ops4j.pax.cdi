@@ -17,18 +17,23 @@
     </properties>
 
     <dependencies>
+    	<dependency>
+    		<groupId>org.glassfish.fighterfish</groupId>
+    		<artifactId>osgi-javaee-base</artifactId>
+    		<version>1.0.7</version>
+    		<scope>provided</scope>
+    	</dependency>
         <dependency>
             <groupId>org.ops4j.pax.cdi</groupId>
             <artifactId>pax-cdi-api</artifactId>
             <version>${project.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.ops4j.pax.cdi</groupId>
-            <artifactId>pax-cdi-spi</artifactId>
-            <version>${project.version}</version>
+		<dependency>
+            <groupId>org.ops4j.pax.swissbox</groupId>
+            <artifactId>pax-swissbox-core</artifactId>
         </dependency>
-
+        
         <dependency>
             <groupId>org.ops4j.pax.swissbox</groupId>
             <artifactId>pax-swissbox-tracker</artifactId>
@@ -43,7 +48,11 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
-            <version>6.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
             <scope>provided</scope>
         </dependency>
         
@@ -76,10 +85,14 @@
                     <instructions>
                         <Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
                         <Import-Package>
-                            org.osgi.framework;version="[1.7,2)",
+                            org.osgi.framework;version="[1.6,2)",
+                            org.osgi.framework.wiring;version="[1.0,2)",
                             org.slf4j;version="[1.6,2)";resolution:=optional,
                             *
                         </Import-Package>
+                        <Export-Package>
+                        	org.ops4j.pax.cdi.extension.*; version=${project.version}
+                        </Export-Package>
                         <Provide-Capability>
                             org.ops4j.pax.cdi.extension; extension=pax-cdi-extension; version:Version=${version;====;${replace;${project.version};-;.}}
                         </Provide-Capability>

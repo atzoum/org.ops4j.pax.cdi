@@ -28,11 +28,11 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
+import javax.enterprise.inject.spi.AfterDeploymentValidation;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanAttributes;
 import javax.enterprise.inject.spi.BeanManager;
@@ -47,7 +47,6 @@ import org.ops4j.pax.cdi.api.OsgiService;
 import org.ops4j.pax.cdi.api.OsgiServiceProvider;
 import org.ops4j.pax.cdi.api.SingletonScoped;
 import org.ops4j.pax.cdi.extension.impl.client.OsgiInjectionTarget;
-import org.ops4j.pax.cdi.extension.impl.client.OsgiInjectionTargetWrapper;
 import org.ops4j.pax.cdi.extension.impl.client.OsgiServiceBean;
 import org.ops4j.pax.cdi.extension.impl.component.ComponentLifecycleManager;
 import org.ops4j.pax.cdi.extension.impl.component.ComponentRegistry;
@@ -56,6 +55,8 @@ import org.ops4j.pax.cdi.extension.impl.context.PrototypeScopeContext;
 import org.ops4j.pax.cdi.extension.impl.context.SingletonScopeContext;
 import org.ops4j.pax.cdi.extension.impl.util.AbstractWrappedBeanAttributes;
 import org.ops4j.pax.cdi.extension.impl.util.InjectionPointOsgiUtils;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +67,6 @@ import org.slf4j.LoggerFactory;
  * @author Harald Wellmann
  *
  */
-@ApplicationScoped
 public class OsgiExtension implements Extension {
 
     private static Logger log = LoggerFactory.getLogger(OsgiExtension.class);
@@ -80,6 +80,10 @@ public class OsgiExtension implements Extension {
     private ComponentRegistry componentRegistry = new ComponentRegistry();
 
     private SingletonScopeContext serviceContext;
+    
+    private ClassLoader classLoader;
+    
+    private Bundle bundle;
 
     /**
      * BeforeBeanDiscovery observer which creates some additional beans and the Service Scope for
@@ -90,13 +94,13 @@ public class OsgiExtension implements Extension {
      */
     public void beforeBeanDiscovery(@Observes BeforeBeanDiscovery event, BeanManager manager) {
         log.debug("beforeBeanDiscovery");
+        classLoader = Thread.currentThread().getContextClassLoader();
         event.addAnnotatedType(manager.createAnnotatedType(BeanBundleImpl.class));
-        event.addAnnotatedType(manager.createAnnotatedType(BundleEventBridge.class));
         event.addAnnotatedType(manager.createAnnotatedType(ServiceEventBridge.class));
         event.addAnnotatedType(manager.createAnnotatedType(BundleContextProducer.class));
         event.addAnnotatedType(manager.createAnnotatedType(ComponentLifecycleManager.class));
-        event.addAnnotatedType(manager.createAnnotatedType(OsgiInjectionTargetWrapper.class));
         event.addScope(SingletonScoped.class, false, false);
+        
     }
 
     /**
@@ -111,6 +115,11 @@ public class OsgiExtension implements Extension {
             return;
         }
 
+        if (bundle == null && Class.class.isInstance(event.getAnnotated().getBaseType())) {
+        	this.bundle = FrameworkUtil.getBundle(Class.class.cast(event.getAnnotated().getBaseType()));
+        	
+        }
+        
         final BeanAttributes<T> attributes = event.getBeanAttributes();
         if (!attributes.getScope().equals(Dependent.class)) {
             return;
@@ -161,7 +170,12 @@ public class OsgiExtension implements Extension {
         if (qualifier != null) {
             log.debug("service injection point {} with qualifier {}", ip, qualifier);
             storeServiceInjectionPoint(ip);
+            if (bundle == null) {
+            	this.bundle = FrameworkUtil.getBundle(ip.getAnnotated().getBaseType().getClass());
+            	
+            }
         }
+        
         Type instanceType = InjectionPointOsgiUtils.getInstanceArgumentType(ip);
         return instanceType != null;
     }
@@ -272,4 +286,18 @@ public class OsgiExtension implements Extension {
     public SingletonScopeContext getServiceContext() {
         return serviceContext;
     }
+    
+    void afterDeployment(@Observes AfterDeploymentValidation event, BeanManager bm) {
+    	if (bundle != null) {
+    		bm.fireEvent(new BeforeCdiStart());
+    	}
+    }
+    
+    public ClassLoader getClassLoader() {
+		return classLoader;
+	}
+    
+    public Bundle getBundle() {
+		return bundle;
+	}
 }

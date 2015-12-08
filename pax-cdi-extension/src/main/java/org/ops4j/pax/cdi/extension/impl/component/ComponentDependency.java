@@ -38,8 +38,7 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
  *
  * @author Harald Wellmann
  */
-public class ComponentDependency<S, T> extends AbstractLifecycle implements
-    ServiceTrackerCustomizer<T, T> {
+public class ComponentDependency<S, T> extends AbstractLifecycle implements ServiceTrackerCustomizer<T, T> {
 
     /**
      * Injection point of this dependency. Must be qualified with {@code @OsgiService).

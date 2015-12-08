@@ -59,8 +59,7 @@ public class ServiceEventBridge implements ServiceListener {
         }
 
         ServiceReference serviceReference = serviceEvent.getServiceReference();
-        ServiceObjectsWrapper serviceObjects =
-            createServiceObjectsWrapper(bundleContext, serviceReference);
+        ServiceObjectsWrapper serviceObjects = createServiceObjectsWrapper(bundleContext, serviceReference);
         Object service = serviceObjects.getService();
 
         try {

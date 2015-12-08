@@ -22,10 +22,12 @@ import java.util.concurrent.Callable;
 
 import javax.enterprise.inject.spi.InjectionPoint;
 
+import org.glassfish.osgijavaeebase.OSGiApplicationInfo;
 import org.ops4j.pax.cdi.extension.impl.compat.OsgiScopeUtils;
 import org.ops4j.pax.cdi.extension.impl.compat.ServiceObjectsWrapper;
 import org.ops4j.pax.cdi.extension.impl.util.InjectionPointOsgiUtils;
 import org.ops4j.pax.swissbox.core.ContextClassLoaderUtils;
+import org.ops4j.pax.swissbox.tracker.ServiceLookup;
 import org.osgi.framework.ServiceException;
 import org.osgi.framework.ServiceReference;
 
@@ -55,8 +57,7 @@ public class StaticInvocationHandler<S> extends AbstractServiceInvocationHandler
     public StaticInvocationHandler(InjectionPoint ip) {
         super(ip);
         this.serviceRef = InjectionPointOsgiUtils.getServiceReference(ip);
-        this.serviceObjects = OsgiScopeUtils.createServiceObjectsWrapper(bundleContext,
-            serviceRef);
+        this.serviceObjects = OsgiScopeUtils.createServiceObjectsWrapper(bundleContext, serviceRef);
         this.service = serviceObjects.getService();
     }
 
@@ -65,8 +66,9 @@ public class StaticInvocationHandler<S> extends AbstractServiceInvocationHandler
     public Object invoke(Object proxy, final Method method, final Object[] args) throws Throwable {
 
         if (serviceRef != null) {
+        	ClassLoader cl = bundleContext.<OSGiApplicationInfo>getService(ServiceLookup.getServiceReference(bundleContext, OSGiApplicationInfo.class.getName(), 0, null)).getClassLoader();
             return ContextClassLoaderUtils.doWithClassLoader(
-                cdiContainer.getContextClassLoader(), new Callable<Object>() {
+            		cl, new Callable<Object>() {
 
                     @Override
                     public Object call() throws Exception {

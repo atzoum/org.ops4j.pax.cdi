@@ -23,7 +23,6 @@ import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
 import org.ops4j.pax.cdi.extension.impl.component.ComponentLifecycleManager;
-import org.ops4j.pax.cdi.spi.ContainerInitialized;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +53,7 @@ public class BeanBundleImpl {
     /**
      * Register OSGi services when the bean is initialized
      */
-    public void onInitialized(@Observes ContainerInitialized event) {
+    public void onInitialized(@Observes BeforeCdiStart event) {
         log.debug("onInitialized {}", bundleContext.getBundle());
         serviceEventBridge.start();
         componentLifecycleManager.start();

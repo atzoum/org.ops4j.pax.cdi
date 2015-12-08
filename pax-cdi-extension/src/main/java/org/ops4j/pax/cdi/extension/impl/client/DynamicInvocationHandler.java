@@ -22,10 +22,14 @@ import java.util.concurrent.Callable;
 
 import javax.enterprise.inject.spi.InjectionPoint;
 
+import org.glassfish.osgijavaeebase.OSGiApplicationInfo;
 import org.ops4j.pax.cdi.extension.impl.compat.OsgiScopeUtils;
 import org.ops4j.pax.cdi.extension.impl.compat.ServiceObjectsWrapper;
 import org.ops4j.pax.cdi.extension.impl.util.InjectionPointOsgiUtils;
 import org.ops4j.pax.swissbox.core.ContextClassLoaderUtils;
+import org.ops4j.pax.swissbox.tracker.ServiceLookup;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -56,11 +60,16 @@ public class DynamicInvocationHandler<S> extends AbstractServiceInvocationHandle
     public Object invoke(Object proxy, final Method method, final Object[] args) throws Throwable {
         @SuppressWarnings("unchecked")
         ServiceReference<S> serviceRef = InjectionPointOsgiUtils.getServiceReference(ip);
-        ServiceObjectsWrapper<S> serviceObjects = OsgiScopeUtils.createServiceObjectsWrapper(
-            bundleContext, serviceRef);
+        BundleContext bundleContext2 = FrameworkUtil.getBundle(Class.class.cast(ip.getType())).getBundleContext();
+        
+        OSGiApplicationInfo info = bundleContext.<OSGiApplicationInfo>getService(ServiceLookup.getServiceReference(bundleContext2, OSGiApplicationInfo.class.getName(), 0, null));
+        ClassLoader cl = info.getClassLoader();
+        ServiceObjectsWrapper<S> serviceObjects = OsgiScopeUtils.createServiceObjectsWrapper(bundleContext2, serviceRef);
         final S service = serviceObjects.getService();
+        try {
         Object result = ContextClassLoaderUtils.doWithClassLoader(
-            cdiContainer.getContextClassLoader(), new Callable<Object>() {
+        		
+        		cl, new Callable<Object>() {
 
                 @Override
                 public Object call() throws Exception {
@@ -69,6 +78,10 @@ public class DynamicInvocationHandler<S> extends AbstractServiceInvocationHandle
             });
         serviceObjects.ungetService(service);
         return result;
+        } catch (Throwable t) {
+        	t.printStackTrace();
+        	throw t;
+        }
     }
 
     @Override

@@ -5,10 +5,7 @@ import java.lang.reflect.InvocationHandler;
 import javax.enterprise.inject.spi.InjectionPoint;
 
 import org.ops4j.pax.cdi.extension.impl.util.InjectionPointOsgiUtils;
-import org.ops4j.pax.cdi.spi.CdiContainer;
-import org.ops4j.pax.cdi.spi.CdiContainerFactory;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 
 /**
  * Common base class for static and dynamic service invocation handlers.
@@ -20,7 +17,6 @@ public abstract class AbstractServiceInvocationHandler implements InvocationHand
 
     protected InjectionPoint ip;
     protected BundleContext bundleContext;
-    protected CdiContainer cdiContainer;
 
     /**
      * Constructs an invocation handler for the given injection point.
@@ -31,10 +27,6 @@ public abstract class AbstractServiceInvocationHandler implements InvocationHand
     protected AbstractServiceInvocationHandler(InjectionPoint ip) {
         this.ip = ip;
         this.bundleContext = InjectionPointOsgiUtils.getBundleContext(ip);
-        ServiceReference<CdiContainerFactory> serviceReference = bundleContext
-            .getServiceReference(CdiContainerFactory.class);
-        CdiContainerFactory cdiContainerFactory = bundleContext.getService(serviceReference);
-        this.cdiContainer = cdiContainerFactory.getContainer(bundleContext.getBundle());
     }
 
     /**

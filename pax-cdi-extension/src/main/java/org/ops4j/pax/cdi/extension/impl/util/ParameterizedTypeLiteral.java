@@ -22,8 +22,6 @@ import java.lang.reflect.Type;
 
 import javax.enterprise.util.TypeLiteral;
 
-import org.ops4j.pax.cdi.spi.util.Exceptions;
-
 /**
  * Extends {@link TypeLiteral} to dynamically set a parameterized type which is not known at compile
  * time.
@@ -78,7 +76,7 @@ public class ParameterizedTypeLiteral extends TypeLiteral<Object> {
             actualTypeField.set(this, paramType);
         }
         catch (IllegalArgumentException | IllegalAccessException exc) {
-            throw Exceptions.unchecked(exc);
+            throw new RuntimeException(exc);
         }
     }
 }

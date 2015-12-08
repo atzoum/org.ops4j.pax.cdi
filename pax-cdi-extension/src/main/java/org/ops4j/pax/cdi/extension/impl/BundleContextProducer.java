@@ -18,13 +18,10 @@
 
 package org.ops4j.pax.cdi.extension.impl;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import org.ops4j.pax.cdi.extension.impl.component.ComponentRegistry;
-import org.ops4j.pax.cdi.spi.BeanBundles;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -33,33 +30,24 @@ import org.osgi.framework.BundleContext;
  * @author Harald Wellmann
  *
  */
-@ApplicationScoped
 class BundleContextProducer {
 
-    private BundleContext bundleContext;
-
-    @Inject
-    private OsgiExtension extension;
 
     /**
      * Produces the bundle context for the current bean bundle.
      * @return bundle context
      */
-    @Produces
-    BundleContext getBundleContext() {
-        if (bundleContext == null) {
-            Bundle bundle = BeanBundles.getBundle(Thread.currentThread().getContextClassLoader());
-            bundleContext = bundle.getBundleContext();
-        }
-        return bundleContext;
+    @Produces @Singleton
+    BundleContext getBundleContext(OsgiExtension extension) {
+    	return extension.getBundle().getBundleContext();
     }
 
     /**
      * Produces the component registry for the current bean bundle.
      * @return component registry
      */
-    @Produces
-    ComponentRegistry getComponentRegistry() {
+    @Produces @Singleton
+    ComponentRegistry getComponentRegistry(OsgiExtension extension) {
         return extension.getComponentRegistry();
     }
 }

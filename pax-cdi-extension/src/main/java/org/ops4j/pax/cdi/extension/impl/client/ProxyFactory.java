@@ -63,7 +63,6 @@ public class ProxyFactory {
         InvocationHandler handler = os.dynamic() ? new DynamicInvocationHandler<T>(ip)
             : new StaticInvocationHandler<T>(ip);
 
-        ClassLoader classLoader = ip.getMember().getDeclaringClass().getClassLoader();
-        return (T) Proxy.newProxyInstance(classLoader, new Class[] { klass }, handler);
+        return (T) Proxy.newProxyInstance(klass.getClassLoader(), new Class[] { klass }, handler);
     }
 }

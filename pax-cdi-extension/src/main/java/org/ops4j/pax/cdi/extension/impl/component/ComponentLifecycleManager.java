@@ -36,8 +36,6 @@ import org.ops4j.pax.cdi.api.OsgiService;
 import org.ops4j.pax.cdi.api.OsgiServiceProvider;
 import org.ops4j.pax.cdi.api.Properties;
 import org.ops4j.pax.cdi.api.Property;
-import org.ops4j.pax.cdi.extension.impl.compat.OsgiScopeUtils;
-import org.ops4j.pax.cdi.extension.impl.context.Osgi6ServiceFactoryBuilder;
 import org.ops4j.pax.cdi.extension.impl.context.ServiceFactoryBuilder;
 import org.ops4j.pax.cdi.extension.impl.util.InjectionPointOsgiUtils;
 import org.osgi.framework.BundleContext;
@@ -85,12 +83,7 @@ public class ComponentLifecycleManager implements ComponentDependencyListener {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void start() {
         componentRegistry.setBundleContext(bundleContext);
-        if (OsgiScopeUtils.hasPrototypeScope(bundleContext)) {
-            serviceFactoryBuilder = new Osgi6ServiceFactoryBuilder(beanManager);
-        }
-        else {
-            serviceFactoryBuilder = new ServiceFactoryBuilder(beanManager);
-        }
+        serviceFactoryBuilder = new ServiceFactoryBuilder(beanManager);
 
         // register services for all components that are satisfied already
         for (Bean bean : componentRegistry.getComponents()) {

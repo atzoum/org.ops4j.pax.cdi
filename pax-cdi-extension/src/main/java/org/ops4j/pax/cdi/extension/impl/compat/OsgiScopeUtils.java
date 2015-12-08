@@ -17,13 +17,8 @@
  */
 package org.ops4j.pax.cdi.extension.impl.compat;
 
-import org.ops4j.pax.cdi.spi.util.Exceptions;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.Version;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Utilities for dealing with prototype scope in OSGi 6.0 or higher.
@@ -32,12 +27,6 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class OsgiScopeUtils {
-
-    private static Logger log = LoggerFactory.getLogger(OsgiScopeUtils.class);
-
-    private static final Version OSGI6_FRAMEWORK_VERSION = new Version(1, 8, 0);
-
-    private static volatile Class<?> wrapperClass;
 
     private OsgiScopeUtils() {
         // Hidden utility class constructor
@@ -53,62 +42,11 @@ public class OsgiScopeUtils {
      * @return wrapper object, with type depending on the OSGi framework version
      */
     @SuppressWarnings("unchecked")
-    public static <S> ServiceObjectsWrapper<S> createServiceObjectsWrapper(BundleContext bc,
-        ServiceReference<S> serviceReference) {
-        ServiceObjectsWrapper<S> w = (ServiceObjectsWrapper<S>) instantiateWrapper(bc);
-        w.init(bc, serviceReference);
-        return w;
+    public static <S> ServiceObjectsWrapper<S> createServiceObjectsWrapper(BundleContext bc, ServiceReference<S> serviceReference) {
+        Osgi5ServiceObjectsWrapper wrapper = new Osgi5ServiceObjectsWrapper();
+        wrapper.init(bc, serviceReference);
+        return wrapper;
     }
 
-    @SuppressWarnings("unchecked")
-    private static <S> ServiceObjectsWrapper<S> instantiateWrapper(BundleContext bc) {
-        try {
-            Object instance = getWrapperClass(bc).newInstance();
-            return (ServiceObjectsWrapper<S>) instance;
-        }
-        catch (InstantiationException | IllegalAccessException exc) {
-            log.error("", exc);
-        }
-        return null;
-    }
 
-    private static Class<?> getWrapperClass(BundleContext bc) {
-        if (wrapperClass == null) {
-            wrapperClass = loadWrapperClass(bc);
-        }
-        return wrapperClass;
-    }
-
-    private static Class<?> loadWrapperClass(BundleContext bc) {
-        String simpleClassName = getWrapperClassName(bc);
-        String className = String.format("%s.%s", OsgiScopeUtils.class.getPackage().getName(),
-            simpleClassName);
-        try {
-            return Class.forName(className, true, OsgiScopeUtils.class.getClassLoader());
-        }
-        catch (ClassNotFoundException exc) {
-            throw Exceptions.unchecked(exc);
-        }
-    }
-
-    private static String getWrapperClassName(BundleContext bc) {
-        if (hasPrototypeScope(bc)) {
-            return "Osgi6ServiceObjectsWrapper";
-        }
-        else {
-            return "Osgi5ServiceObjectsWrapper";
-        }
-    }
-
-    /**
-     * Checks if the current OSGi framework supports prototype scope.
-     *
-     * @param bc
-     *            bundle context of any bundle
-     * @return true if the framework version is 1.8 or higher
-     */
-    public static boolean hasPrototypeScope(BundleContext bc) {
-        Version actualVersion = Version.parseVersion(bc.getProperty(Constants.FRAMEWORK_VERSION));
-        return actualVersion.compareTo(OSGI6_FRAMEWORK_VERSION) >= 0;
-    }
 }
